@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¿QUIÉN ES QUIÉN? — Chernóbil</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500;700&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0e0f;
+  --bg2: #141618;
+  --bg3: #1a1d20;
+  --panel: #111315;
+  --border: #252a2f;
+  --border2: #2e353c;
+  --amber: #e8a020;
+  --amber2: #c07810;
+  --amber-dim: #5a3a08;
+  --amber-glow: rgba(232,160,32,0.12);
+  --red: #d43030;
+  --red-dim: #4a1010;
+  --green: #2ea84a;
+  --green-dim: #0d3018;
+  --blue: #2890d0;
+  --text: #d4c8b0;
+  --text2: #8a8070;
+  --text3: #4a4540;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+body {
+  color: var(--text);
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+/* Contenedor principal: aquí vive TODO el scroll */
+#app {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+#app::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:9999;
+  opacity:0.5;
+}
+
+/* SCREENS */
+.screen { display:none; }
+.screen.active { display:block; }
+
+/* ===== INTRO ===== */
+#intro { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem; text-align:center; }
+#intro.active { display:flex; }
+.intro-stamp { font-family:'Bebas Neue',sans-serif; font-size:0.85rem; letter-spacing:0.5em; color:var(--amber2); margin-bottom:1rem; opacity:0.7; }
+.intro-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(3rem,10vw,7rem); color:var(--amber); line-height:0.9; margin-bottom:0.5rem; text-shadow:0 0 40px rgba(232,160,32,0.3); letter-spacing:0.05em; }
+.intro-title span { display:block; font-size:0.35em; letter-spacing:0.3em; color:var(--text2); font-family:'IBM Plex Mono',monospace; margin-bottom:0.5rem; }
+.intro-divider { width:120px; height:1px; background:linear-gradient(90deg,transparent,var(--amber),transparent); margin:1.5rem auto; }
+.intro-desc { max-width:540px; font-size:1rem; color:var(--text2); line-height:1.7; margin-bottom:2.5rem; font-weight:300; }
+.intro-desc strong { color:var(--amber); font-weight:600; }
+.rules-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; max-width:500px; width:100%; margin:0 auto 2.5rem; background:var(--border); border:1px solid var(--border); }
+.rule { background:var(--bg2); padding:1rem; text-align:left; }
+.rule-num { font-family:'Bebas Neue',sans-serif; font-size:2rem; color:var(--amber-dim); line-height:1; margin-bottom:0.3rem; }
+.rule-text { font-size:0.8rem; color:var(--text2); line-height:1.5; }
+.btn-start { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; letter-spacing:0.2em; color:var(--bg); background:var(--amber); border:none; padding:0.9rem 3rem; cursor:pointer; transition:all 0.2s; clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%); }
+.btn-start:hover { background:#f0b030; transform:scale(1.04); box-shadow:0 0 30px rgba(232,160,32,0.4); }
+
+/* ===== SETUP ===== */
+#setup { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem; text-align:center; }
+#setup.active { display:flex; }
+.setup-title { font-family:'Bebas Neue',sans-serif; font-size:2.5rem; color:var(--amber); letter-spacing:0.1em; margin-bottom:0.5rem; }
+.setup-sub { font-family:'IBM Plex Mono',monospace; font-size:0.75rem; color:var(--text3); letter-spacing:0.2em; margin-bottom:2rem; }
+.secret-pick { background:var(--bg2); border:1px solid var(--border2); padding:1.5rem; max-width:680px; width:100%; margin:0 auto 1.5rem; }
+.secret-pick p { font-size:0.9rem; color:var(--text2); margin-bottom:1rem; line-height:1.5; }
+.secret-pick p strong { color:var(--amber); }
+.mini-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:1rem; }
+.mini-card {
+  background:var(--bg3); border:1px solid var(--border); cursor:pointer; transition:all 0.15s; text-align:center; overflow:hidden; position:relative;
+}
+.mini-card img { width:100%; aspect-ratio:1; object-fit:cover; object-position:top; display:block; filter:grayscale(40%); transition:filter 0.2s; }
+.mini-card:hover img { filter:grayscale(0%); }
+.mini-card .mini-name { font-family:'IBM Plex Mono',monospace; font-size:0.52rem; color:var(--text3); line-height:1.3; padding:3px 2px; }
+.mini-card:hover { border-color:var(--amber2); }
+.mini-card:hover .mini-name { color:var(--text2); }
+.mini-card.selected { border-color:var(--amber); box-shadow:0 0 12px rgba(232,160,32,0.3); }
+.mini-card.selected img { filter:grayscale(0%); }
+.mini-card.selected .mini-name { color:var(--amber); }
+.mini-card.selected::after { content:'✓'; position:absolute; top:3px; right:4px; font-size:0.8rem; color:var(--amber); font-weight:700; text-shadow:0 0 6px rgba(0,0,0,0.8); }
+.btn-confirm { font-family:'Bebas Neue',sans-serif; font-size:1.2rem; letter-spacing:0.2em; color:var(--bg); background:var(--amber); border:none; padding:0.75rem 2.5rem; cursor:pointer; transition:all 0.2s; opacity:0.4; pointer-events:none; }
+.btn-confirm.ready { opacity:1; pointer-events:all; }
+.btn-confirm.ready:hover { background:#f0b030; transform:scale(1.03); }
+
+/* ===== GAME ===== */
+#game { height:100vh; }
+#game.active { display:grid; grid-template-rows:auto 1fr; }
+.game-bar { background:var(--panel); border-bottom:1px solid var(--border); padding:0.6rem 1.5rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; }
+.bar-title { font-family:'Bebas Neue',sans-serif; font-size:1.1rem; color:var(--amber); letter-spacing:0.15em; }
+.bar-stats { display:flex; gap:1.5rem; align-items:center; }
+.bar-stat { text-align:center; }
+.bar-stat-val { font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:700; color:var(--amber); }
+.bar-stat-lbl { font-size:0.6rem; color:var(--text3); letter-spacing:0.15em; text-transform:uppercase; }
+.game-body { display:grid; grid-template-columns:1fr 320px; height:100%; min-height:0; overflow:hidden; }
+.board-panel { padding:1rem 1.25rem; background:var(--bg); border-right:1px solid var(--border); overflow-y:auto; }
+.board-label { font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:var(--text3); letter-spacing:0.25em; text-transform:uppercase; margin-bottom:0.75rem; }
+.board-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+
+/* CHARACTER CARDS */
+.char-card {
+  background:var(--bg2); border:1px solid var(--border); cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden; user-select:none;
+}
+.char-card img {
+  width:100%; aspect-ratio:1/1; object-fit:cover; object-position:center center; display:block; filter:grayscale(30%); transition:filter 0.2s;
+}
+.char-card:hover:not(.elim) img { filter:grayscale(0%); }
+.char-card:hover:not(.elim) { border-color:var(--amber2); }
+.char-info { padding:0.35rem 0.3rem; background:linear-gradient(transparent,rgba(0,0,0,0.7)); }
+.char-name-card { font-family:'IBM Plex Mono',monospace; font-size:0.52rem; color:var(--text2); line-height:1.3; text-align:center; }
+.char-role-card { font-size:0.45rem; color:var(--text3); text-align:center; line-height:1.2; margin-top:1px; }
+
+/* ELIMINATED */
+.char-card.elim img { filter:grayscale(100%) brightness(0.3); }
+.char-card.elim .char-name-card { color:var(--text3); }
+.char-card.elim .char-role-card { color:var(--text3); opacity:0.4; }
+.elim-x {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:'Bebas Neue',sans-serif; font-size:3rem; color:rgba(212,48,48,0.5); pointer-events:none;
+  background:rgba(0,0,0,0.4);
+}
+.char-card.highlight { border-color:var(--amber); box-shadow:0 0 12px rgba(232,160,32,0.25); }
+.char-card.guess-target { border-color:var(--red); animation:targetPulse 0.8s ease-in-out infinite alternate; }
+@keyframes targetPulse { from{box-shadow:0 0 8px rgba(212,48,48,0.4);} to{box-shadow:0 0 20px rgba(212,48,48,0.7);} }
+
+/* CHAT PANEL */
+.chat-panel { background:var(--panel); display:flex; flex-direction:column; overflow:hidden; }
+.chat-header { padding:0.75rem 1rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.chat-header-title { font-family:'Bebas Neue',sans-serif; font-size:0.9rem; letter-spacing:0.15em; color:var(--text2); }
+.turn-badge { font-family:'IBM Plex Mono',monospace; font-size:0.6rem; padding:0.25rem 0.6rem; letter-spacing:0.1em; border:1px solid; }
+.turn-badge.player { border-color:var(--amber); color:var(--amber); background:rgba(232,160,32,0.08); }
+.turn-badge.machine { border-color:var(--blue); color:var(--blue); background:rgba(40,144,208,0.08); }
+.chat-messages { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:0.75rem; }
+/* ===== SCROLLBARS TEMÁTICOS ===== */
+/* Scrollbar general del #app */
+#app::-webkit-scrollbar { width: 10px; }
+#app::-webkit-scrollbar-track {
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  position: relative;
+}
+#app::-webkit-scrollbar-track::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0; bottom: 0;
+  width: 1px;
+  background: var(--border2);
+}
+#app::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--amber-dim) 0%, var(--amber2) 40%, var(--amber) 60%, var(--amber2) 100%);
+  border-radius: 0;
+  border: 1px solid rgba(232,160,32,0.2);
+  box-shadow: 0 0 6px rgba(232,160,32,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+  position: relative;
+}
+#app::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--amber2) 0%, var(--amber) 50%, var(--amber2) 100%);
+  box-shadow: 0 0 12px rgba(232,160,32,0.6);
+}
+#app::-webkit-scrollbar-corner { background: var(--bg); }
+
+/* Scrollbar del tablero de juego */
+.board-panel::-webkit-scrollbar { width: 8px; }
+.board-panel::-webkit-scrollbar-track {
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+}
+.board-panel::-webkit-scrollbar-thumb {
+  background: repeating-linear-gradient(
+    180deg,
+    var(--border2) 0px,
+    var(--border2) 4px,
+    var(--amber-dim) 4px,
+    var(--amber-dim) 8px
+  );
+  border: 1px solid var(--border);
+}
+.board-panel::-webkit-scrollbar-thumb:hover {
+  background: repeating-linear-gradient(
+    180deg,
+    var(--amber-dim) 0px,
+    var(--amber-dim) 4px,
+    var(--amber2) 4px,
+    var(--amber2) 8px
+  );
+}
+
+/* Scrollbar del chat */
+.chat-messages::-webkit-scrollbar { width: 6px; }
+.chat-messages::-webkit-scrollbar-track {
+  background: var(--panel);
+}
+.chat-messages::-webkit-scrollbar-thumb {
+  background: var(--border2);
+  border-radius: 0;
+  border-left: 2px solid var(--amber-dim);
+}
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--amber-dim);
+  border-left-color: var(--amber2);
+}
+
+/* Scrollbar de botones de preguntas */
+.q-buttons::-webkit-scrollbar { width: 5px; }
+.q-buttons::-webkit-scrollbar-track { background: var(--bg3); }
+.q-buttons::-webkit-scrollbar-thumb {
+  background: var(--amber-dim);
+  border-left: 1px solid var(--amber2);
+}
+
+/* Firefox */
+* { scrollbar-width: thin; scrollbar-color: var(--amber2) var(--bg); }
+.msg { display:flex; flex-direction:column; gap:0.2rem; animation:msgIn 0.25s ease; }
+@keyframes msgIn { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:none;} }
+.msg-sender { font-family:'IBM Plex Mono',monospace; font-size:0.6rem; color:var(--text3); letter-spacing:0.15em; text-transform:uppercase; }
+.msg.player .msg-sender { color:var(--amber2); }
+.msg.machine .msg-sender { color:#2870a0; }
+.msg-bubble { padding:0.65rem 0.85rem; font-size:0.85rem; line-height:1.55; border-radius:2px; }
+.msg.player .msg-bubble { background:rgba(232,160,32,0.08); border:1px solid var(--amber-dim); color:var(--text); align-self:flex-end; max-width:90%; }
+.msg.machine .msg-bubble { background:rgba(40,144,208,0.07); border:1px solid #1a3550; color:var(--text); max-width:90%; }
+.msg.system .msg-bubble { background:var(--bg2); border:1px solid var(--border); color:var(--text2); font-style:italic; font-size:0.78rem; width:100%; }
+.msg-bubble strong { color:var(--amber); }
+.msg-bubble .yes { color:var(--green); font-weight:700; }
+.msg-bubble .no { color:var(--red); font-weight:700; }
+.typing-indicator { display:none; gap:4px; align-items:center; padding:0.5rem 0; }
+.typing-indicator.show { display:flex; }
+.dot { width:5px; height:5px; background:var(--blue); border-radius:50%; animation:bounce 1.2s ease-in-out infinite; }
+.dot:nth-child(2){animation-delay:0.2s;} .dot:nth-child(3){animation-delay:0.4s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-6px);}}
+.chat-input-area { border-top:1px solid var(--border); padding:0.75rem; }
+.q-section-label { font-family:'IBM Plex Mono',monospace; font-size:0.6rem; color:var(--text3); letter-spacing:0.15em; margin-bottom:0.4rem; text-transform:uppercase; }
+.q-buttons { display:flex; flex-direction:column; gap:4px; max-height:180px; overflow-y:auto; }
+.q-btn { background:var(--bg3); border:1px solid var(--border); color:var(--text2); padding:0.45rem 0.75rem; font-size:0.75rem; cursor:pointer; text-align:left; font-family:'IBM Plex Sans',sans-serif; transition:all 0.15s; line-height:1.3; }
+.q-btn:hover { border-color:var(--amber2); color:var(--text); background:var(--bg2); }
+.q-btn:disabled { opacity:0.3; cursor:not-allowed; }
+.answer-row { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:0.5rem; }
+.btn-yes,.btn-no { font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.15em; border:1px solid; padding:0.55rem; cursor:pointer; transition:all 0.15s; }
+.btn-yes { color:var(--green); border-color:#1a4028; background:rgba(46,168,74,0.06); }
+.btn-yes:hover { background:rgba(46,168,74,0.15); }
+.btn-no { color:var(--red); border-color:var(--red-dim); background:rgba(212,48,48,0.06); }
+.btn-no:hover { background:rgba(212,48,48,0.15); }
+.btn-guess-final { font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:0.2em; color:var(--bg); background:var(--amber); border:none; padding:0.6rem; cursor:pointer; transition:all 0.2s; width:100%; margin-top:0.5rem; }
+.btn-guess-final:hover { background:#f0b030; }
+.input-hint { font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:var(--text3); text-align:center; padding-top:0.4rem; letter-spacing:0.05em; }
+
+/* ===== MODAL ===== */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; padding:1.5rem; }
+.modal-overlay.show { display:flex; }
+.modal { background:var(--bg2); border:1px solid var(--border2); max-width:540px; width:100%; animation:modalIn 0.3s ease; max-height:90vh; overflow-y:auto; }
+@keyframes modalIn{from{opacity:0;transform:scale(0.95) translateY(10px);}to{opacity:1;transform:none;}}
+.modal-top { padding:2rem; text-align:center; border-bottom:1px solid var(--border); }
+.modal-result-label { font-family:'Bebas Neue',sans-serif; font-size:0.8rem; letter-spacing:0.4em; margin-bottom:0.75rem; }
+.modal-result-label.win { color:var(--green); }
+.modal-result-label.lose { color:var(--red); }
+.modal-photo { width:120px; height:120px; object-fit:cover; object-position:top; border:2px solid var(--border2); margin:0 auto 1rem; display:block; }
+.modal-char-name { font-family:'Bebas Neue',sans-serif; font-size:2.2rem; color:var(--amber); letter-spacing:0.05em; line-height:1.1; margin-bottom:0.25rem; }
+.modal-char-role { font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:var(--text2); letter-spacing:0.2em; }
+.score-row { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); margin-top:1rem; }
+.score-cell { background:var(--bg3); padding:0.75rem; text-align:center; }
+.score-cell-val { font-family:'IBM Plex Mono',monospace; font-size:1.4rem; font-weight:700; color:var(--amber); }
+.score-cell-lbl { font-size:0.62rem; color:var(--text3); letter-spacing:0.1em; text-transform:uppercase; margin-top:0.2rem; }
+.curiosity-box { padding:1.5rem 2rem; border-bottom:1px solid var(--border); }
+.curiosity-label { font-family:'IBM Plex Mono',monospace; font-size:0.6rem; color:var(--amber2); letter-spacing:0.3em; text-transform:uppercase; margin-bottom:0.75rem; }
+.curiosity-text { font-size:0.9rem; color:var(--text); line-height:1.7; font-weight:300; }
+.curiosity-text strong { color:var(--amber); font-weight:600; }
+.modal-actions { padding:1.25rem 2rem; display:flex; gap:0.75rem; }
+.btn-modal { flex:1; font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:0.2em; border:1px solid; padding:0.7rem; cursor:pointer; transition:all 0.15s; }
+.btn-modal.primary { color:var(--bg); background:var(--amber); border-color:var(--amber); }
+.btn-modal.primary:hover { background:#f0b030; }
+.btn-modal.secondary { color:var(--text2); background:transparent; border-color:var(--border2); }
+.btn-modal.secondary:hover { color:var(--text); border-color:var(--text3); }
+
+/* TOOLTIP on hover */
+.char-card .tooltip {
+  position:absolute; bottom:100%; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.95); border:1px solid var(--amber-dim);
+  padding:0.5rem 0.75rem; font-size:0.7rem; color:var(--text); white-space:nowrap; pointer-events:none; opacity:0; transition:opacity 0.15s; z-index:10; font-family:'IBM Plex Mono',monospace;
+}
+.char-card:hover .tooltip { opacity:1; }
+
+@media(max-width:700px){
+  .game-body{grid-template-columns:1fr; grid-template-rows:auto auto;}
+  .chat-panel{max-height:400px;}
+  .board-grid{grid-template-columns:repeat(5,1fr);}
+  .mini-grid{grid-template-columns:repeat(5,1fr);}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- INTRO -->
+<div id="intro" class="screen active">
+  <p class="intro-stamp">ЧЕРНОБЫЛЬ · 26 ABRIL 1986</p>
+  <h1 class="intro-title"><span>¿QUIÉN ES QUIÉN?</span> CHERNÓBIL </h1>
+  <div class="intro-divider"></div>
+  <p class="intro-desc">
+    28 personas reales que vivieron la catástrofe. Elige un personaje secreto. La máquina elige otro. Por turnos hacéis preguntas sobre el <strong>aspecto físico</strong> para descubrir quién es el rival. ¡Sin trampa! <br> <b>Desliza hacia abajo para Continuar ... </b> </p>
+  <div class="rules-grid">
+    <div class="rule"><div class="rule-num">01</div><div class="rule-text">Elige tu personaje secreto viendo sus fotos reales</div></div>
+    <div class="rule"><div class="rule-num">02</div><div class="rule-text">Haz preguntas sobre el aspecto físico: pelo, barba, edad…</div></div>
+    <div class="rule"><div class="rule-num">03</div><div class="rule-text">Elimina del tablero a quien no coincida</div></div>
+    <div class="rule"><div class="rule-num">04</div><div class="rule-text">Adivina el personaje rival antes que la máquina</div></div>
+  </div>
+  <button class="btn-start" onclick="goToSetup()">▶ COMENZAR MISIÓN</button>
+</div>
+
+<!-- SETUP -->
+<div id="setup" class="screen">
+  <p class="setup-title">ELIGE TU PERSONAJE SECRETO</p>
+  <p class="setup-sub">// Pasa el ratón sobre la foto para ver el nombre</p>
+  <div class="secret-pick">
+    <p>Haz clic en el personaje que <strong>tú quieres ser</strong>. La máquina intentará adivinar tu personaje preguntando por tu aspecto físico.</p>
+    <div class="mini-grid" id="mini-grid"></div>
+    <button class="btn-confirm" id="btn-confirm" onclick="confirmSetup()">CONFIRMAR PERSONAJE →</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game" class="screen">
+  <div class="game-bar">
+    <span class="bar-title">☢ ЧЕРНОБЫЛЬ — ¿QUIÉN ES QUIÉN?</span>
+    <div class="bar-stats">
+      <div class="bar-stat"><div class="bar-stat-val" id="stat-remaining">25</div><div class="bar-stat-lbl">Tus restantes</div></div>
+      <div class="bar-stat"><div class="bar-stat-val" id="stat-turn">0</div><div class="bar-stat-lbl">Preguntas</div></div>
+      <div class="bar-stat"><div class="bar-stat-val" id="stat-machine">25</div><div class="bar-stat-lbl">IA restantes</div></div>
+    </div>
+  </div>
+  <div class="game-body">
+    <div class="board-panel">
+      <div class="board-label">// Tu tablero — Haz clic para tachar · Pasa el ratón para ver el nombre</div>
+      <div class="board-grid" id="board-grid"></div>
+    </div>
+    <div class="chat-panel">
+      <div class="chat-header">
+        <span class="chat-header-title">// SALA DE INTERROGACIÓN</span>
+        <span class="turn-badge player" id="turn-badge">TU TURNO</span>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="typing-indicator" id="typing">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+      </div>
+      <div class="chat-input-area" id="input-area"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-top">
+      <div class="modal-result-label" id="modal-result-label">REVELACIÓN</div>
+      <img class="modal-photo" id="modal-photo" src="" alt="">
+      <div class="modal-char-name" id="modal-char-name"></div>
+      <div class="modal-char-role" id="modal-char-role"></div>
+      <div class="score-row">
+        <div class="score-cell"><div class="score-cell-val" id="sc-turns">?</div><div class="score-cell-lbl">Preguntas</div></div>
+        <div class="score-cell"><div class="score-cell-val" id="sc-elim">?</div><div class="score-cell-lbl">Eliminados</div></div>
+        <div class="score-cell"><div class="score-cell-val" id="sc-winner">?</div><div class="score-cell-lbl">Ganador</div></div>
+      </div>
+    </div>
+    <div class="curiosity-box">
+      <div class="curiosity-label">☢ Curiosidad histórica</div>
+      <div class="curiosity-text" id="modal-curiosity"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal secondary" onclick="closeModal()">CERRAR</button>
+      <button class="btn-modal primary" onclick="playAgain()">↺ NUEVA PARTIDA</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== DATA =====================
+// Fotos: imágenes de dominio público / Wikimedia Commons de personas reales de Chernóbil
+const characters = [
+  {
+    id:0, name:"Valeri Legasov", role:"Químico / Investigador principal",
+    photo:"https://i.postimg.cc/CLCz4rLC/legasov.jpg",
+    // Rasgos físicos
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:true, uniforme:false, joven:false, mayor:false, pelo_largo:false,
+      cara_redonda:false, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Legasov fue el científico jefe enviado por el Kremlin. <strong>Grabó cintas con toda la verdad</strong> sobre el accidente antes de suicidarse el 27 de abril de 1988, exactamente dos años después. Sus grabaciones revelaron negligencia sistémica en la URSS."
+  },
+  {
+    id:1, name:"Viktor Bryukhanov", role:"Director de la Central Nuclear",
+    photo:"https://i.postimg.cc/GhPHjgh8/bryukha.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:false, joven:false, mayor:false, pelo_largo:false,
+      cara_redonda:true, entradas:false, pelo_rizado:true
+    },
+    curiosity:"Bryukhanov fue director de Chernóbil desde su construcción. <strong>Condenado a 10 años de cárcel</strong> en 1987. Negó la magnitud del accidente durante horas cruciales, retrasando la evacuación de Prípiat más de 36 horas."
+  },
+  {
+    id:2, name:"Anatoli Diátlov", role:"Jefe de turno / Ingeniero",
+    photo:"https://i.postimg.cc/150fK75g/diatlov.png",
+    attrs:{
+      mujer:false, pelo_canoso:true, pelo_oscuro:false, calvo:false, barba:false, bigote:true,
+      gafas:true, uniforme:false, joven:false, mayor:false, pelo_largo:false,
+      cara_redonda:false, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Diátlov ordenó continuar la prueba ignorando las alertas de seguridad. <strong>Murió en 1995</strong> con la salud muy deteriorada por la exposición a la radiación que recibió aquella noche de abril de 1986."
+  },
+  {
+    id:3, name:"Mikhail Gorbachov", role:"Secretario General de la URSS",
+    photo:"https://i.postimg.cc/SNLJG1NJ/gorbachov.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:false, calvo:true, barba:false, bigote:false,
+      gafas:false, uniforme:false, joven:false, mayor:true, pelo_largo:false,
+      cara_redonda:true, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Gorbachov admitió que <strong>Chernóbil fue el detonante real de la Glasnost</strong>. Escribió: 'Chernóbil fue quizás la causa verdadera del colapso de la Unión Soviética.' Tardó 18 días en hablar públicamente del accidente."
+  },
+  {
+    id:4, name:"Boris Shcherbina", role:"Vicepresidente del Consejo de Ministros",
+    photo:"https://i.postimg.cc/Wbmh7Yb1/shcherbina.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:false, joven:false, mayor:true, pelo_largo:false,
+      cara_redonda:true, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Shcherbina lideró las operaciones de limpieza. <strong>Murió en 1990</strong> con la salud muy deteriorada. Fue quien ordenó la construcción del sarcófago y el sacrificio de animales domésticos en la Zona de Exclusión."
+  },
+  {
+    id:5, name:"Hans Blix", role:"Director General del OIEA",
+    photo:"https://i.postimg.cc/xTGcPpTH/blix.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:false, calvo:true, barba:false, bigote:false,
+      gafas:true, uniforme:false, joven:false, mayor:true, pelo_largo:false,
+      cara_redonda:false, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Blix dirigió la reunión del OIEA en Viena donde la URSS <strong>presentó su versión oficial del accidente</strong>. La presentación de Legasov duró 5 horas y sorprendió a los expertos occidentales con su aparente honestidad."
+  },
+  {
+    id:6, name:"Svetlana Alexiévich", role:"Periodista / Premio Nobel Literatura",
+    photo:"https://i.postimg.cc/wT57k4Tq/alexievich.jpg",
+    attrs:{
+      mujer:true, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:false, joven:false, mayor:true, pelo_largo:false,
+      cara_redonda:true, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Alexiévich recopiló cientos de testimonios en <strong>'Voces de Chernóbil'</strong> (1997). En 2015 ganó el Premio Nobel de Literatura. Definió Chernóbil como 'el rostro de una tragedia que no sabemos mirar'."
+  },
+  {
+    id:7, name:"Vasili Ignatenko", role:"Bombero de Prípiat",
+    photo:"https://i.postimg.cc/PrbPMVrT/ignatenko.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:true, joven:true, mayor:false, pelo_largo:false,
+      cara_redonda:true, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Ignatenko fue uno de los primeros bomberos en llegar al reactor sin protección. <strong>Murió el 13 de mayo de 1986</strong>. Su historia de amor con su esposa Lyudmila, que lo acompañó embarazada hasta el final, se hizo mundialmente famosa."
+  },
+  {
+    id:8, name:"Lyudmila Ignatenko", role:"Esposa del bombero Vasili",
+    photo:"https://i.postimg.cc/jd6Lh3dr/lyudmilaignatenko.jpg",
+    attrs:{
+      mujer:true, pelo_canoso:false, pelo_oscuro:false, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:false, joven:true, mayor:false, pelo_largo:true,
+      cara_redonda:true, entradas:false, pelo_rizado:true
+    },
+    curiosity:"Lyudmila ignoró las advertencias médicas y <strong>permaneció junto a su marido radiactivo</strong> en el hospital de Moscú. Su bebé murió a los días de nacer por la radiación absorbida. Su testimonio abre 'Voces de Chernóbil'."
+  },
+  {
+    id:9, name:"Nikolái Antoshkin", role:"General de las Fuerzas Aéreas",
+    photo:"https://i.postimg.cc/qMczGDMH/Antoshkin.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:true, joven:false, mayor:false, pelo_largo:false,
+      cara_redonda:false, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Antoshkin coordinó los <strong>más de 1.800 vuelos de helicóptero</strong> que lanzaron 5.000 toneladas de arena, plomo y boro sobre el reactor. Recibió la Estrella de Héroe de la Unión Soviética."
+  },
+  {
+    id:10, name:"Angelina Guskova", role:"Médica especialista en radiación",
+    photo:"https://i.postimg.cc/7Yr50rDZ/guskova.jpg",
+    attrs:{
+      mujer:true, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:false, joven:false, mayor:true, pelo_largo:false,
+      cara_redonda:true, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Guskova dirigió el Hospital nº6 de Moscú donde se trataron las primeras víctimas. <strong>Clasificó a los pacientes por dosis de radiación</strong> y fue la primera en diagnosticar síndrome de irradiación aguda masiva a gran escala."
+  },
+  {
+    id:11, name:"Igor Kostin", role:"Fotógrafo de Chernóbil",
+    photo:"https://i.postimg.cc/m2WPCWRZ/kostin.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:true,
+      gafas:false, uniforme:false, joven:false, mayor:false, pelo_largo:false,
+      cara_redonda:false, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Kostin fue el primer fotógrafo en llegar al reactor en helicóptero. <strong>La radiación veló casi todos sus carretes.</strong> Publicó las primeras imágenes del desastre que vio el mundo y regresó décadas para documentar la Zona de Exclusión."
+  },
+  {
+    id:12, name:"Vladimir Pravík", role:"Teniente de bomberos",
+    photo:"https://i.postimg.cc/Kvh1BhFF/pravik.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:true, joven:true, mayor:false, pelo_largo:false,
+      cara_redonda:true, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Pravík tenía <strong>23 años</strong> cuando lideró a los primeros bomberos sobre el tejado del reactor sin protección. Murió el 11 de mayo de 1986 y fue galardonado póstumamente con la Estrella de Héroe de la Unión Soviética."
+  },
+  {
+    id:13, name:"Leonid Teletín", role:"Mayor de bomberos / Jefe Teliatnikov",
+    photo:"https://i.postimg.cc/CLpRkpY0/teletin.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:true, joven:false, mayor:false, pelo_largo:false,
+      cara_redonda:false, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Teliatnikov dirigió a los bomberos en las primeras horas. Sobrevivió tras meses de tratamiento en Moscú por irradiación grave. <strong>Murió en 2004 de cáncer</strong>, probablemente relacionado con la exposición a la radiación."
+  },
+  {
+    id:14, name:"Aleksandr Akimov", role:"Jefe de turno nocturno del reactor",
+    photo:"https://i.postimg.cc/7Yr50rD8/akimov.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:true,
+      gafas:true, uniforme:false, joven:true, mayor:false, pelo_largo:false,
+      cara_redonda:true, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Akimov estuvo en la sala de control durante la explosión. <strong>Murió el 11 de mayo de 1986</strong>. Sus últimas palabras fueron de incredulidad: 'Hice todo bien. No entiendo por qué ocurrió esto.'"
+  },
+  {
+    id:15, name:"Leonid Toptunov", role:"Operador senior del reactor",
+    photo:"https://i.postimg.cc/28N1hNYt/Toptunov.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:true,
+      gafas:true, uniforme:false, joven:true, mayor:false, pelo_largo:false,
+      cara_redonda:false, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Toptunov tenía solo <strong>26 años</strong> cuando murió el 14 de mayo de 1986. Era el operador presionado por Diátlov para continuar la prueba. Presionó el botón AZ-5 que desencadenó la explosión al intentar apagar el reactor."
+  },
+  {
+    id:16, name:"Yuri Shcherbak", role:"Médico / Escritor / Periodista",
+    photo:"https://i.postimg.cc/7Yr50r4Q/Scherbak.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:true, pelo_oscuro:false, calvo:false, barba:false, bigote:false,
+      gafas:true, uniforme:false, joven:false, mayor:true, pelo_largo:false,
+      cara_redonda:true, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Shcherbak fue uno de los primeros en documentar el desastre entrevistando supervivientes. <strong>Publicó 'Chernóbil' en 1987</strong>, cuando aún era tabú en la URSS. Su trabajo fue pionero del periodismo sobre el accidente."
+  },
+  {
+    id:17, name:"Anatoli Sitnikov", role:"Ingeniero jefe adjunto",
+    photo:"https://i.postimg.cc/ZKzWpzmg/sitnikov.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:false, joven:true, mayor:false, pelo_largo:false,
+      cara_redonda:true, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Sitnikov fue enviado al tejado del reactor para <strong>evaluar los daños a simple vista</strong>. Recibió una dosis letal y falleció el 30 de mayo de 1986. Informó correctamente de que el núcleo estaba destruido, pero sus superiores tardaron en creerle."
+  },
+  {
+    id:18, name:"Alexander Yuvchenko", role:"Ingeniero de turno — superviviente",
+    photo:"https://i.postimg.cc/YqBvYB7b/yuvchenko.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:false, joven:false, mayor:false, pelo_largo:false,
+      cara_redonda:false, entradas:true, pelo_rizado:false
+    },
+    curiosity:"Yuvchenko sostuvo la puerta del reactor para que salieran sus compañeros. <strong>La radiación que recibió en 15 segundos fue devastadora.</strong> Murió en 2008 de cáncer. Es uno de los pocos que estuvo junto al núcleo expuesto y sobrevivió años."
+  },
+  {
+    id:19, name:"Nikolái Steinberg", role:"Ingeniero jefe de seguridad",
+    photo:"https://i.postimg.cc/8Pg7MgGH/steinber.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:true, pelo_oscuro:false, calvo:true, barba:true, bigote:false,
+      gafas:true, uniforme:false, joven:false, mayor:true, pelo_largo:false,
+      cara_redonda:false, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Steinberg era ingeniero jefe de seguridad en Chernóbil y testificó en el juicio de 1987. <strong>Documentó las graves deficiencias de diseño del reactor RBMK</strong> que sus superiores conocían pero ocultaron durante años por razones políticas."
+  },
+  {
+    id:20, name:"Yuri Andreev", role:"Liquidador / Dosimetrista",
+    photo:"https://i.postimg.cc/YqBvYB78/andreev.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:false, joven:true, mayor:false, pelo_largo:false,
+      cara_redonda:false, entradas:false, pelo_rizado:true
+    },
+    curiosity:"Andreev medía las dosis de radiación de los liquidadores. <strong>Los dosímetros se 'perdían' o no registraban la dosis real</strong> para que los trabajadores pudieran continuar. Documentó este fraude sistemático que costó la salud a miles de personas."
+  },
+  {
+    id:21, name:"Natasha Yuvchenko", role:"Esposa del ingeniero superviviente",
+    photo:"https://i.postimg.cc/kMbV2X0z/natashayuvchenko.jpg",
+    attrs:{
+      mujer:true, pelo_canoso:false, pelo_oscuro:false, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:false, joven:false, mayor:true, pelo_largo:false,
+      cara_redonda:true, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Natasha esperó meses la recuperación de su marido gravemente irradiado. <strong>Alexander sobrevivió con el brazo paralizado</strong> y quemaduras en el 27% del cuerpo. Su historia se convirtió en símbolo de resistencia familiar ante la catástrofe."
+  },
+  {
+    id:22, name:"Maria Protsenko", role:"Arquitecta jefa de Prípiat",
+    photo:"https://i.postimg.cc/pVF9mXw6/protsenko.jpg",
+    attrs:{
+      mujer:true, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:false, joven:false, mayor:true, pelo_largo:false,
+      cara_redonda:true, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Protsenko diseñó muchos edificios de Prípiat y coordinó la evacuación. <strong>Fue ella quien rotulaba los mapas de evacuación</strong>. Años después regresó como guía de la ciudad que ella misma construyó y que ya nadie habita."
+  },
+  {
+    id:23, name:"Grigori Medvedev", role:"Ingeniero nuclear / Escritor",
+    photo:"https://i.postimg.cc/DfXWSy9P/medvedev.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:true, joven:true, mayor:false, pelo_largo:false,
+      cara_redonda:false, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Medvedev era ingeniero nuclear que había trabajado en Chernóbil antes del accidente. <strong>Escribió 'La verdad sobre Chernóbil'</strong>, uno de los primeros relatos técnicos exhaustivos del desastre publicado en la URSS durante la Glasnost."
+  },
+  {
+    id:24, name:"Piotr Zborovský", role:"Liquidador / Soldado de reserva",
+    photo:"https://i.postimg.cc/tRx1sCKt/zborovsky.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:true, bigote:true,
+      gafas:false, uniforme:true, joven:false, mayor:false, pelo_largo:false,
+      cara_redonda:false, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Como decenas de miles de reservistas, fue movilizado para limpiar el tejado manualmente. Los llamaban <strong>'biorobots'</strong> porque los robots fallaban por la radiación. Trabajaban 40-90 segundos y recibían su dosis máxima permitida de por vida."
+  },
+  {
+    id:25, name:"Valeri Khodemchuk", role:"Operador de bombas del reactor 4",
+    photo:"https://i.postimg.cc/WpkDdbBG/Hodemchuk.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:false, joven:false, mayor:false, pelo_largo:false,
+      cara_redonda:false, entradas:true, pelo_rizado:false
+    },
+    curiosity:"Khodemchuk fue la <strong>primera víctima mortal de la explosión</strong>. Estaba en la sala de bombas del reactor 4 cuando se produjo el estallido. Su cuerpo nunca fue encontrado y permanece enterrado bajo el sarcófago de hormigón para siempre."
+  },
+  {
+    id:26, name:"Aleksandr Lelechenko", role:"Jefe adjunto de electricidad",
+    photo:"https://i.postimg.cc/8k6F7P2b/lelechenko.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:false, uniforme:false, joven:false, mayor:false, pelo_largo:false,
+      cara_redonda:false, entradas:true, pelo_rizado:false
+    },
+    curiosity:"Lelechenko tomó una decisión heroica: <strong>hizo el recorrido por zonas radiactivas tres veces</strong> para evitar que sus jóvenes compañeros se expusieran. Recibió una dosis letal él solo. Murió el 7 de mayo de 1986 en Kiev."
+  },
+  {
+    id:27, name:"Nikolái Fomin", role:"Ingeniero jefe de la central",
+    photo:"https://i.postimg.cc/MZQcnKCH/formin.jpg",
+    attrs:{
+      mujer:false, pelo_canoso:false, pelo_oscuro:true, calvo:false, barba:false, bigote:false,
+      gafas:true, uniforme:false, joven:false, mayor:false, pelo_largo:false,
+      cara_redonda:true, entradas:false, pelo_rizado:false
+    },
+    curiosity:"Fomin era el ingeniero jefe responsable de la prueba que causó la explosión. <strong>Sufrió un colapso nervioso</strong> tras el accidente y fue hospitalizado. Fue juzgado junto a Bryukhanov y Diátlov y condenado a 10 años de campo de trabajos."
+  }
+];
+
+// ===================== PREGUNTAS FÍSICAS =====================
+// Para que el jugador pregunte a la máquina
+const physicalQuestions = [
+  { text:"¿Es mujer?",                                        attr:"mujer",        val:true },
+  { text:"¿Tiene el pelo canoso o blanco?",                   attr:"pelo_canoso",  val:true },
+  { text:"¿Tiene el pelo oscuro (negro o castaño oscuro)?",   attr:"pelo_oscuro",  val:true },
+  { text:"¿Está calvo o casi calvo?",                         attr:"calvo",        val:true },
+  { text:"¿Tiene barba (no solo bigote)?",                    attr:"barba",        val:true },
+  { text:"¿Tiene bigote?",                                    attr:"bigote",       val:true },
+  { text:"¿Lleva gafas?",                                     attr:"gafas",        val:true },
+  { text:"¿Lleva uniforme (militar o de bombero)?",           attr:"uniforme",     val:true },
+  { text:"¿Parece joven (menos de 35 años aproximadamente)?", attr:"joven",        val:true },
+  { text:"¿Parece mayor (más de 55 años aproximadamente)?",   attr:"mayor",        val:true },
+  { text:"¿Tiene el pelo largo (hasta los hombros o más)?",  attr:"pelo_largo",   val:true },
+  { text:"¿Tiene la cara redonda o ancha?",                   attr:"cara_redonda", val:true },
+  { text:"¿Tiene entradas notables en el pelo?",              attr:"entradas",     val:true },
+  { text:"¿Tiene el pelo rizado o muy ondulado?",             attr:"pelo_rizado",  val:true },
+];
+
+// ===================== ESTADO =====================
+let playerSecret = null;
+let machineSecret = null;
+let playerBoard = [];
+let machineBoard = [];
+let totalTurns = 0;
+let usedPlayerQ = [];
+let usedMachineQ = [];
+let gameOver = false;
+
+// ===================== UTILIDADES =====================
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('app').scrollTop = 0;
+}
+function showTyping(v) {
+  document.getElementById('typing').className = v ? 'typing-indicator show' : 'typing-indicator';
+}
+function addMsg(who, html) {
+  const c = document.getElementById('chat-messages');
+  const t = document.getElementById('typing');
+  const d = document.createElement('div');
+  const label = who==='player'?'▶ TÚ': who==='machine'?'◀ MÁQUINA':'— SISTEMA —';
+  d.className = `msg ${who}`;
+  d.innerHTML = `<span class="msg-sender">${label}</span><div class="msg-bubble">${html}</div>`;
+  c.insertBefore(d, t);
+  c.scrollTop = c.scrollHeight;
+}
+function setTurnBadge(player) {
+  const b = document.getElementById('turn-badge');
+  b.textContent = player ? 'TU TURNO' : 'TURNO IA';
+  b.className = `turn-badge ${player ? 'player' : 'machine'}`;
+}
+function updateStats() {
+  document.getElementById('stat-remaining').textContent = playerBoard.length;
+  document.getElementById('stat-turn').textContent = totalTurns;
+  document.getElementById('stat-machine').textContent = machineBoard.length;
+}
+
+// Fallback si la imagen no carga (Wikimedia a veces falla)
+function imgFallback(img, name) {
+  img.onerror = null;
+  img.style.background = '#1a2a1a';
+  img.style.display = 'flex';
+  img.outerHTML = `<div style="width:100%;aspect-ratio:3/4;background:#1a2a1a;display:flex;align-items:center;justify-content:center;font-size:2rem">👤</div>`;
+}
+
+// ===================== SETUP =====================
+function goToSetup() {
+  show('setup');
+  buildMiniGrid();
+}
+
+function buildMiniGrid() {
+  const grid = document.getElementById('mini-grid');
+  grid.innerHTML = '';
+  characters.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'mini-card';
+    d.id = `mini-${c.id}`;
+    d.innerHTML = `
+      <img src="${c.photo}" alt="${c.name}" loading="lazy" onerror="this.src='';this.style.background='#1a2a1a';this.style.minHeight='60px'">
+      <div class="mini-name">${c.name.split(' ')[0]}<br>${c.name.split(' ').slice(1).join(' ')}</div>`;
+    d.onclick = () => selectSecret(c.id);
+    grid.appendChild(d);
+  });
+}
+
+function selectSecret(id) {
+  document.querySelectorAll('.mini-card').forEach(el => el.classList.remove('selected'));
+  document.getElementById(`mini-${id}`).classList.add('selected');
+  playerSecret = characters.find(c => c.id === id);
+  const btn = document.getElementById('btn-confirm');
+  btn.classList.add('ready');
+  btn.textContent = `✓ SOY ${playerSecret.name.toUpperCase()} →`;
+}
+
+function confirmSetup() {
+  if (!playerSecret) return;
+  const available = characters.filter(c => c.id !== playerSecret.id);
+  machineSecret = available[Math.floor(Math.random() * available.length)];
+  playerBoard = characters.map(c => c.id);
+  machineBoard = characters.map(c => c.id);
+  usedPlayerQ = []; usedMachineQ = [];
+  totalTurns = 0; gameOver = false;
+  show('game');
+  buildBoard();
+  updateStats();
+  addMsg('system', `Partida iniciada. Tú eres <strong>${playerSecret.name}</strong>. La máquina intentará adivinarte preguntando por tu aspecto físico.`);
+  addMsg('system', `Haz preguntas sobre la <strong>apariencia física</strong> del personaje de la máquina. <strong>Haz clic en el tablero para tachar</strong> a los descartados.`);
+  setTimeout(() => renderPlayerInput(), 600);
+}
+
+// ===================== TABLERO =====================
+function buildBoard() {
+  const grid = document.getElementById('board-grid');
+  grid.innerHTML = '';
+  characters.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'char-card';
+    d.id = `card-${c.id}`;
+    d.innerHTML = `
+      <div class="tooltip">${c.name}</div>
+      <img src="${c.photo}" alt="${c.name}" loading="lazy" onerror="this.src='';this.style.background='#1a2a1a';this.style.minHeight='80px'">
+      <div class="char-info">
+        <div class="char-name-card">${c.name}</div>
+        <div class="char-role-card">${c.role}</div>
+      </div>`;
+    d.onclick = () => toggleElim(c.id);
+    grid.appendChild(d);
+  });
+}
+
+function toggleElim(id) {
+  if (gameOver) return;
+  const card = document.getElementById(`card-${id}`);
+  const c = characters.find(ch => ch.id === id);
+  if (card.classList.contains('elim')) {
+    card.classList.remove('elim');
+    card.querySelector('.elim-x')?.remove();
+    if (!playerBoard.includes(id)) playerBoard.push(id);
+  } else {
+    card.classList.add('elim');
+    const x = document.createElement('div');
+    x.className = 'elim-x'; x.textContent = '✗';
+    card.appendChild(x);
+    playerBoard = playerBoard.filter(i => i !== id);
+  }
+  updateStats();
+}
+
+// ===================== INPUT DEL JUGADOR =====================
+function renderPlayerInput() {
+  if (gameOver) return;
+  setTurnBadge(true);
+  const area = document.getElementById('input-area');
+  const available = physicalQuestions.filter(q => !usedPlayerQ.includes(q.attr));
+  const canGuess = playerBoard.length <= 4;
+  area.innerHTML = `
+    <div class="q-section-label">Pregunta sobre su aspecto físico (${available.length} restantes):</div>
+    <div class="q-buttons" id="q-btns">
+      ${available.map(q => `<button class="q-btn" onclick="playerAsks('${q.attr}')">${q.text}</button>`).join('')}
+    </div>
+    ${canGuess ? `<button class="btn-guess-final" onclick="enableGuessMode()">🎯 ACUSACIÓN FINAL</button>` : ''}
+    <p class="input-hint">Quedan <strong>${playerBoard.length}</strong> personajes activos</p>`;
+}
+
+function playerAsks(attr) {
+  if (gameOver) return;
+  const q = physicalQuestions.find(p => p.attr === attr);
+  usedPlayerQ.push(attr);
+  totalTurns++;
+  addMsg('player', q.text);
+  const answer = machineSecret.attrs[attr] === true;
+  document.querySelectorAll('.q-btn').forEach(b => b.disabled = true);
+  showTyping(true);
+  setTimeout(() => {
+    showTyping(false);
+    addMsg('machine', answer ? `<span class="yes">✓ SÍ</span>` : `<span class="no">✗ NO</span>`);
+    updateStats();
+    setTimeout(() => machineTurn(), 700);
+  }, 800 + Math.random()*500);
+}
+
+// ===================== ACUSACIÓN FINAL DEL JUGADOR =====================
+function enableGuessMode() {
+  addMsg('system', '🎯 Modo acusación activado. <strong>Haz clic en la foto</strong> del personaje que crees que es la máquina.');
+  document.querySelectorAll('.char-card:not(.elim)').forEach(card => {
+    card.classList.add('guess-target');
+    const id = parseInt(card.id.replace('card-',''));
+    card.onclick = () => playerFinalGuess(id);
+  });
+  document.getElementById('input-area').innerHTML = `<p class="input-hint">🎯 Haz clic en la foto del sospechoso</p>`;
+}
+
+function playerFinalGuess(id) {
+  if (gameOver) return;
+  gameOver = true;
+  document.querySelectorAll('.char-card').forEach(c => { c.classList.remove('guess-target'); c.onclick = null; });
+  const guessed = characters.find(c => c.id === id);
+  totalTurns++;
+  addMsg('player', `¡Mi acusación final: <strong>${guessed.name}</strong>!`);
+  showTyping(true);
+  setTimeout(() => {
+    showTyping(false);
+    const correct = id === machineSecret.id;
+    if (correct) {
+      addMsg('machine', `<span class="yes">✓ ¡CORRECTO!</span> ¡Has adivinado que era <strong>${machineSecret.name}</strong>! 🏆`);
+    } else {
+      addMsg('machine', `<span class="no">✗ ¡INCORRECTO!</span> Mi personaje era <strong>${machineSecret.name}</strong>.`);
+    }
+    setTimeout(() => showReveal(correct ? 'player' : 'machine'), 1000);
+  }, 900);
+}
+
+// ===================== TURNO DE LA MÁQUINA =====================
+function machineTurn() {
+  if (gameOver) return;
+  setTurnBadge(false);
+  document.getElementById('input-area').innerHTML = `<p class="input-hint">La máquina está analizando tu aspecto...</p>`;
+
+  // Si quedan 1 o 2, adivinar
+  if (machineBoard.length <= 2) {
+    const guessId = machineBoard[0];
+    const guessChar = characters.find(c => c.id === guessId);
+    showTyping(true);
+    setTimeout(() => {
+      showTyping(false);
+      gameOver = true;
+      addMsg('machine', `He analizado todas las pistas. <strong>¡Acuso a: ${guessChar.name}!</strong>`);
+      setTimeout(() => {
+        const correct = guessId === playerSecret.id;
+        if (correct) addMsg('machine', `<span class="no">¡Te he pillado! Eras <strong>${playerSecret.name}</strong>. ¡Gana la máquina! 🤖</span>`);
+        else addMsg('machine', `<span class="yes">¡He fallado! Pensé que eras <strong>${guessChar.name}</strong>, pero eres <strong>${playerSecret.name}</strong>. ¡Ganas tú! 🏆</span>`);
+        setTimeout(() => showReveal(correct ? 'machine' : 'player'), 1200);
+      }, 700);
+    }, 1100);
+    return;
+  }
+
+  // Elegir la pregunta más discriminante (más cercana al 50%)
+  const remaining = physicalQuestions.filter(q => !usedMachineQ.includes(q.attr));
+  if (remaining.length === 0) {
+    // Fuerza acusación si no quedan preguntas
+    const guessId = machineBoard[Math.floor(Math.random()*machineBoard.length)];
+    const gc = characters.find(c => c.id === guessId);
+    showTyping(true);
+    setTimeout(()=>{
+      showTyping(false); gameOver=true;
+      addMsg('machine',`Me quedo sin preguntas. <strong>¡Acuso a: ${gc.name}!</strong>`);
+      setTimeout(()=>{
+        const ok = guessId===playerSecret.id;
+        addMsg('machine', ok ? `<span class="no">¡Acerté! Eras <strong>${playerSecret.name}</strong>. 🤖</span>` : `<span class="yes">¡Fallé! Eres <strong>${playerSecret.name}</strong>. 🏆</span>`);
+        setTimeout(()=>showReveal(ok?'machine':'player'),1200);
+      },700);
+    },1000);
+    return;
+  }
+
+  // Calcular balance
+  remaining.sort((a,b)=>{
+    const bal = q => {
+      const count = machineBoard.filter(id=>characters.find(c=>c.id===id).attrs[q.attr]===true).length;
+      return Math.abs(count/machineBoard.length - 0.5);
+    };
+    return bal(a)-bal(b);
+  });
+  const chosen = remaining[0];
+  usedMachineQ.push(chosen.attr);
+
+  showTyping(true);
+  setTimeout(() => {
+    showTyping(false);
+    addMsg('machine', chosen.text);
+    renderAnswerInput(chosen);
+  }, 900 + Math.random()*600);
+}
+
+function renderAnswerInput(q) {
+  if (gameOver) return;
+  setTurnBadge(true);
+  const area = document.getElementById('input-area');
+  area.innerHTML = `
+    <div class="q-section-label">La máquina pregunta — responde honestamente:</div>
+    <div style="padding:0.65rem;background:var(--bg3);border:1px solid var(--border);font-size:0.82rem;color:var(--text2);margin-bottom:0.5rem;line-height:1.4">${q.text}</div>
+    <div style="font-size:0.7rem;color:var(--amber2);margin-bottom:0.4rem;font-family:'IBM Plex Mono',monospace">Tu personaje: <strong>${playerSecret.name}</strong></div>
+    <div class="answer-row">
+      <button class="btn-yes" onclick="playerAnswers(true,'${q.attr}')">✓ SÍ</button>
+      <button class="btn-no" onclick="playerAnswers(false,'${q.attr}')">✗ NO</button>
+    </div>`;
+}
+
+function playerAnswers(answer, attr) {
+  if (gameOver) return;
+  addMsg('player', answer ? `<span class="yes">✓ SÍ</span>` : `<span class="no">✗ NO</span>`);
+  totalTurns++;
+  // La máquina elimina personajes que no coincidan
+  machineBoard = machineBoard.filter(id => {
+    const c = characters.find(ch => ch.id === id);
+    return (c.attrs[attr] === true) === answer;
+  });
+  // Asegurar que el secreto del jugador esté siempre en machineBoard
+  if (!machineBoard.includes(playerSecret.id)) machineBoard = [playerSecret.id, ...machineBoard];
+  updateStats();
+  setTimeout(() => renderPlayerInput(), 400);
+}
+
+// ===================== REVELAR RESULTADO =====================
+function showReveal(winner) {
+  const isPlayerWin = winner === 'player';
+  document.getElementById('modal-result-label').className = `modal-result-label ${isPlayerWin?'win':'lose'}`;
+  document.getElementById('modal-result-label').textContent = isPlayerWin ? '🏆 ¡VICTORIA!' : '💀 ¡DERROTA!';
+  document.getElementById('modal-photo').src = machineSecret.photo;
+  document.getElementById('modal-photo').alt = machineSecret.name;
+  document.getElementById('modal-char-name').textContent = machineSecret.name;
+  document.getElementById('modal-char-role').textContent = machineSecret.role;
+  document.getElementById('modal-curiosity').innerHTML = machineSecret.curiosity;
+  document.getElementById('sc-turns').textContent = totalTurns;
+  document.getElementById('sc-elim').textContent = 25 - playerBoard.length;
+  document.getElementById('sc-winner').textContent = isPlayerWin ? '🏆 TÚ' : '🤖 IA';
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
+function playAgain() { closeModal(); goToSetup(); }
+
+show('intro');
+</script>
+</div><!-- /#app -->
+</body>
+</html>
